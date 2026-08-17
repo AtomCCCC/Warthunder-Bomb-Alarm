@@ -1,42 +1,44 @@
-# 战争雷霆 8111 投弹提醒器
+# War Thunder 8111 Bomb Alarm
 
-一个只读本机 `127.0.0.1:8111` 遥测的投弹航线与 Notification 提醒原型。它不注入游戏、不读取游戏内存，也不搜索或显示敌方单位。
+**English** | [简体中文](./README.zh-CN.md)
 
-## 启动
+A bombing-route and browser-notification assistant that only reads the local War Thunder telemetry interface at `127.0.0.1:8111`. It does not inject into the game, read game memory, or search for and display enemy units.
 
-1. 启动《战争雷霆》，进入试飞或战斗。
-2. 在 PowerShell 中运行：
+## Getting started
+
+1. Start War Thunder and enter a test flight or battle.
+2. Run the following command in PowerShell:
 
    ```powershell
    .\start.ps1
    ```
 
-3. 浏览器打开 <http://127.0.0.1:8112>。
-4. 点击“启用通知”，然后点击地图中的 `B` 轰炸区、`A` 机场、`Z` 占领/防守区，或直接点击地图上的任意点。
+3. Open <http://127.0.0.1:8112> in your browser.
+4. Select **Enable notifications**, then choose a `B` bombing zone, `A` airfield, or `Z` capture/defence zone on the map. You can also click any map position to set a custom target.
 
-轰炸区从地图对象中消失并持续 1.5 秒时，系统判定该区已被摧毁；若它正是当前目标，会自动取消航线并提醒。新轰炸区出现或旧区重新出现时，会发出“战区已刷新”提醒并重置目标。
+If a bombing zone disappears from the tactical map for at least 1.5 seconds, the application treats it as destroyed. If it was the selected target, the route is cleared automatically and a notification is displayed. When a new zone appears or a destroyed zone returns, the application reports that the zones have refreshed and resets the selected target.
 
-侧栏的“基地载荷规划器”会从公开的 [LEGION's Loadouts · Bomb Chart](https://docs.google.com/spreadsheets/d/1oNwp_MXszU5J2dcaz5IoCtSAQ-infPdOWhwtJXqtrwU/edit?gid=1447098598#gid=1447098598) 读取各 BR 区间的基地 HP、炸弹数量及各国载荷页，并缓存 6 小时。8111 能提供当前载具内部名称，程序会尝试匹配表中的机型、BR 和表内可用挂载；8111 不提供当前选择的炸弹型号，因此存在多个方案时仍需手动选择。
+The **Base Loadout Planner** reads BR ranges, base HP, bomb quantities, and nation loadout pages from the public [LEGION's Loadouts · Bomb Chart](https://docs.google.com/spreadsheets/d/1oNwp_MXszU5J2dcaz5IoCtSAQ-infPdOWhwtJXqtrwU/edit?gid=1447098598#gid=1447098598), caching the results for six hours. The application attempts to match the internal aircraft name supplied by 8111 to the aircraft, BR, and compatible loadouts listed in the chart. Because 8111 does not expose the currently selected bomb, the bomb type must still be selected manually when multiple loadouts are available.
 
-没有启动游戏时，可以预览界面：
+To preview the interface without running the game:
 
 ```powershell
 python .\wt_bomb_alert.py --demo
 ```
 
-## 使用的 8111 端点
+## 8111 endpoints
 
-| 端点 | 用途 |
+| Endpoint | Purpose |
 | --- | --- |
-| `/state` | 真空速、高度、垂直速度 |
-| `/indicators` | 载具类型、俯仰和滚转显示 |
-| `/map_info.json` | 归一化地图坐标换算为米 |
-| `/map_obj.json` | 识别己机位置，跟踪固定任务区域状态，并仅筛选颜色明确为蓝/绿阵营的友机 |
-| `/map.img` | 游戏内置战术地图背景 |
+| `/state` | True airspeed, altitude, and vertical speed |
+| `/indicators` | Vehicle type, pitch, and roll indicators |
+| `/map_info.json` | Converts normalized map coordinates to metres |
+| `/map_obj.json` | Locates the player, tracks fixed mission-zone states, and filters confirmed blue/green allied aircraft only |
+| `/map.img` | Built-in tactical-map background |
 
-## 解算模型
+## Ballistic model
 
-当前版本是假设炸弹继承飞机速度的二维简化弹道模型：
+The current version uses a simplified two-dimensional model in which the bomb inherits the aircraft's velocity:
 
 ```text
 t_fall = (v_vertical + sqrt(v_vertical² + 2·g·height)) / g
@@ -44,21 +46,21 @@ release_lead = horizontal_speed · t_fall · retention
 time_to_release = (along_track_distance - release_lead) / closing_speed + calibration
 ```
 
-其中高度为“海拔高度 - 目标标高”。`retention` 是用于近似炸弹空气阻力的水平速度保留率。
+Here, height is calculated as aircraft altitude minus target elevation. `retention` approximates the horizontal velocity retained by the bomb under drag.
 
-## 重要限制
+## Important limitations
 
-- 8111 没有提供完整的炸弹质量、阻力系数、风、目标地形高度和挂载弹道表，默认解算只能作为投弹提醒，不能替代游戏内 CCIP/CCRP。
-- Bomb Chart 是社区维护数据且标题仍标注游戏版本 2.25；游戏更新、机型改权重或炸弹伤害调整后，请用面板中的 BR 手动覆盖并在试飞中核对。
-- 四基地地图使用表格原值；三基地“半载荷”和街机不刷新基地“双载荷”是该表 FAQ 的经验规则，面板会向上取整，不保证覆盖所有任务规则。
-- 不同炸弹、速度和高度需要在“试飞”中校准保留率与时间偏移。
-- 地图与遥测更新不是逐帧的；高速低空投弹应预留更大的误差。
-- 浏览器 Notification 需要仪表盘保持打开，并由用户手动授予权限。
-- 避免利用 8111 数据显示本来不可见的敌方目标；Gaijin 官方论坛已明确这可能被视为 ESP/不公平优势。
-- 战区层使用严格白名单，不会向前端传递飞机、坦克、舰船、防空单位等作战对象。
-- 友机层只传递明确的蓝色/绿色飞机；红色敌机和阵营不明飞机均在后端过滤。
+- The 8111 interface does not provide complete bomb mass, drag coefficients, wind, target terrain elevation, or weapon-specific ballistic tables. The default solution is only a release reminder and is not a replacement for in-game CCIP/CCRP.
+- The Bomb Chart is community-maintained and its title still references game version 2.25. After game updates, BR changes, or bomb-damage adjustments, verify the result in a test flight and override the BR manually if necessary.
+- Four-base maps use the chart's original values. The three-base “half load” and non-respawning Arcade-base “double load” options are rules of thumb from the chart FAQ. The planner rounds upward, but these estimates may not cover every mission rule.
+- Different bombs, speeds, and altitudes should be calibrated in a test flight using the retention and time-offset controls.
+- Tactical-map and telemetry updates are not frame-perfect. Allow a larger safety margin for high-speed, low-altitude releases.
+- Browser notifications require the dashboard to remain open and permission to be granted manually.
+- Avoid using 8111 data to expose enemy targets that would not normally be visible. Gaijin has stated on its official forum that doing so may be treated as ESP or an unfair advantage.
+- The mission-zone layer uses a strict allowlist and never passes aircraft, tank, ship, anti-aircraft, or other combat-unit objects to the front end.
+- The allied-aircraft layer only passes aircraft whose colour is clearly blue or green. Red and unknown-team aircraft are filtered by the back end.
 
-## 测试
+## Tests
 
 ```powershell
 python -m unittest discover -s tests -v
