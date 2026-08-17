@@ -302,31 +302,40 @@ function renderMarkers(player) {
 }
 
 function renderZones(zones) {
-  const signature = JSON.stringify(zones);
-  if (signature === ui.zoneLayer.dataset.signature) return;
-  ui.zoneLayer.dataset.signature = signature;
-  ui.zoneLayer.replaceChildren();
   renderedZones = zones;
+  const liveIds = new Set(zones.map((zone) => zone.id));
+
+  for (const marker of ui.zoneLayer.querySelectorAll(".zone-marker")) {
+    if (!liveIds.has(marker.dataset.zoneId)) marker.remove();
+  }
 
   for (const zone of zones) {
-    const marker = document.createElement("button");
-    marker.type = "button";
+    let marker = [...ui.zoneLayer.querySelectorAll(".zone-marker")]
+      .find((candidate) => candidate.dataset.zoneId === zone.id);
+    if (!marker) {
+      marker = document.createElement("button");
+      marker.type = "button";
+      marker.dataset.zoneId = zone.id;
+      marker.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const selectedZone = renderedZones.find((item) => item.id === marker.dataset.zoneId);
+        if (!selectedZone) return;
+        target = { x: selectedZone.x, y: selectedZone.y };
+        targetZoneId = selectedZone.id;
+        lastStatus = null;
+        saveSettings();
+        renderMarkers(null);
+      });
+      ui.zoneLayer.append(marker);
+    }
+
     marker.className = `zone-marker ${zone.kind} ${zone.team}`;
-    marker.dataset.zoneId = zone.id;
+    marker.classList.toggle("selected", targetZoneId === zone.id);
     marker.textContent = zone.short_label;
     marker.title = `${zone.label} · 点击设为投弹目标`;
     marker.setAttribute("aria-label", `${zone.label}，点击设为投弹目标`);
     marker.style.left = `${zone.x * 100}%`;
     marker.style.top = `${zone.y * 100}%`;
-    marker.addEventListener("click", (event) => {
-      event.stopPropagation();
-      target = { x: zone.x, y: zone.y };
-      targetZoneId = zone.id;
-      lastStatus = null;
-      saveSettings();
-      renderMarkers(null);
-    });
-    ui.zoneLayer.append(marker);
   }
 }
 
