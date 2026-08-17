@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <defs>
+    <pattern id="grid" width="150" height="150" patternUnits="userSpaceOnUse">
+      <path d="M150 0H0V150" fill="none" stroke="#3b4d50" stroke-width="1"/>
+    </pattern>
+    <filter id="rough"><feTurbulence baseFrequency=".012" numOctaves="3" seed="4"/><feColorMatrix values=".14 0 0 0 .08 0 .18 0 0 .12 0 0 .16 0 .13 0 0 0 .3 0"/></filter>
+  </defs>
+  <rect width="1200" height="760" fill="#233136"/>
+  <rect width="1200" height="760" filter="url(#rough)" opacity=".72"/>
+  <path d="M-30 620C180 510 244 612 430 516S692 312 866 340s220-89 374-122" fill="none" stroke="#405d63" stroke-width="42" opacity=".4"/>
+  <path d="M-30 620C180 510 244 612 430 516S692 312 866 340s220-89 374-122" fill="none" stroke="#789095" stroke-width="3" opacity=".22"/>
+  <path d="M0 210C208 156 296 205 440 147s294 22 414-35 212-58 346-34" fill="none" stroke="#6d765e" stroke-width="76" opacity=".18"/>
+  <rect width="1200" height="760" fill="url(#grid)"/>
+  <g fill="#95a8aa" opacity=".55" font-family="monospace" font-size="18">
+    <text x="18" y="28">A1</text><text x="168" y="28">B1</text><text x="318" y="28">C1</text><text x="468" y="28">D1</text><text x="618" y="28">E1</text><text x="768" y="28">F1</text><text x="918" y="28">G1</text><text x="1068" y="28">H1</text>
+  </g>
+  <g opacity=".55">
+    <path d="M915 455h84" stroke="#d2b36b" stroke-width="8"/><path d="M957 413v84" stroke="#d2b36b" stroke-width="8"/>
+    <circle cx="957" cy="455" r="36" fill="none" stroke="#d2b36b" stroke-width="3"/>
+  </g>
+</svg>

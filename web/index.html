@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WT 投弹提醒器</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">B</span>
+        <div>
+          <p class="eyebrow">WAR THUNDER · LOCAL 8111</p>
+          <h1>投弹提醒器</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span id="connection" class="connection offline"><i></i>等待游戏</span>
+        <button id="notifyButton" class="button primary" type="button">启用通知</button>
+      </div>
+    </header>
+
+    <section id="alertPanel" class="alert-panel waiting" aria-live="polite">
+      <div>
+        <p class="eyebrow">BOMBING COMPUTER</p>
+        <h2 id="alertMessage">等待游戏遥测</h2>
+      </div>
+      <div class="countdown">
+        <span id="countdownValue">--</span>
+        <small>SEC</small>
+      </div>
+    </section>
+
+    <div id="eventToast" class="event-toast" role="status" aria-live="assertive">
+      <strong id="eventToastTitle">战区状态</strong>
+      <span id="eventToastBody"></span>
+    </div>
+
+    <div class="layout">
+      <section class="map-card card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">TACTICAL MAP</p>
+            <h2>选择战区或点击地图</h2>
+          </div>
+          <div class="map-actions">
+            <span id="zoneStatus" class="zone-status">战区 -- · 友机 --</span>
+            <button id="clearTarget" class="button ghost" type="button">清除目标</button>
+          </div>
+        </div>
+        <div id="mapStage" class="map-stage" role="button" tabindex="0" aria-label="点击选择投弹目标">
+          <img id="mapImage" alt="战争雷霆战术地图">
+          <svg class="map-overlay" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+            <line id="routeLine" class="route-line" x1="0" y1="0" x2="0" y2="0"></line>
+          </svg>
+          <div id="zoneLayer" class="zone-layer" aria-label="战区位置"></div>
+          <div id="allyLayer" class="ally-layer" aria-label="友军飞机位置"></div>
+          <span id="playerMarker" class="player-marker" title="己机"></span>
+          <span id="targetMarker" class="target-marker" title="投弹目标"></span>
+          <div class="map-empty">
+            <strong>地图等待中</strong>
+            <span>进入试飞或战斗后自动加载</span>
+          </div>
+        </div>
+        <div class="map-help">
+          <span><i class="legend-dot bombing"></i>B：轰炸区</span>
+          <span><i class="legend-dot airfield"></i>A：机场</span>
+          <span><i class="legend-dot capture"></i>Z：占领/防守区</span>
+          <span><i class="legend-dot ally"></i>蓝色箭头：友机</span>
+          <span class="safety-note">仅显示固定任务区域，不显示敌方作战单位。</span>
+        </div>
+      </section>
+
+      <aside class="side-column">
+        <section class="card telemetry-card">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">FLIGHT DATA</p>
+              <h2 id="aircraftName">当前载具</h2>
+            </div>
+          </div>
+          <dl class="telemetry-grid">
+            <div><dt>真空速</dt><dd><span id="tas">--</span><small>km/h</small></dd></div>
+            <div><dt>高度</dt><dd><span id="altitude">--</span><small>m</small></dd></div>
+            <div><dt>升降率</dt><dd><span id="verticalSpeed">--</span><small>m/s</small></dd></div>
+            <div><dt>滚转</dt><dd><span id="roll">--</span><small>deg</small></dd></div>
+            <div><dt>目标距离</dt><dd><span id="distance">--</span><small>km</small></dd></div>
+            <div><dt>航线偏差</dt><dd><span id="crossTrack">--</span><small>m</small></dd></div>
+            <div><dt>炸弹滞空</dt><dd><span id="fallTime">--</span><small>s</small></dd></div>
+            <div><dt>提前量</dt><dd><span id="releaseDistance">--</span><small>km</small></dd></div>
+          </dl>
+        </section>
+
+        <section class="card planner-card">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">LEGION LOADOUT DATA</p>
+              <h2>基地载荷规划器</h2>
+            </div>
+            <span id="plannerDetected" class="planner-detected">等待识别</span>
+          </div>
+          <div class="planner-fields">
+            <label>
+              <span>飞机权重（BR）</span>
+              <input id="plannerBr" type="number" min="1" max="13.7" step="0.1" placeholder="例如 11.3">
+            </label>
+            <label>
+              <span>地图规则</span>
+              <select id="baseMode">
+                <option value="four">四基地地图（表格原值）</option>
+                <option value="three">三基地地图（约半载荷）</option>
+                <option value="arcade">街机不刷新基地（约双载荷）</option>
+              </select>
+            </label>
+            <label class="wide">
+              <span>炸弹型号（8111 无法读取，需选择）</span>
+              <input id="bombName" list="bombOptions" autocomplete="off" placeholder="输入 Mk 82、BLU-1…">
+              <datalist id="bombOptions"></datalist>
+            </label>
+          </div>
+          <div class="planner-result" aria-live="polite">
+            <div>
+              <span>稳定摧毁一个基地</span>
+              <strong><b id="bombCount">--</b> 枚</strong>
+            </div>
+            <div>
+              <span>炸弹总重</span>
+              <strong><b id="plannerTotalWeight">--</b> kg</strong>
+            </div>
+          </div>
+          <p id="plannerDetail" class="planner-detail">载入公开 Bomb Chart 后计算。</p>
+          <p id="plannerStatus" class="planner-status">正在读取社区数据…</p>
+          <a id="bombSource" class="planner-source" href="https://docs.google.com/spreadsheets/d/1oNwp_MXszU5J2dcaz5IoCtSAQ-infPdOWhwtJXqtrwU/edit?gid=1447098598#gid=1447098598" target="_blank" rel="noreferrer">数据来源：LEGION's Loadouts · Bomb Chart ↗</a>
+        </section>
+
+        <details class="card settings-card">
+          <summary>
+            <span><span class="eyebrow">CALIBRATION</span>解算设置</span>
+            <span class="chevron">⌄</span>
+          </summary>
+          <div class="settings-body">
+            <label>目标标高 <span><input id="elevation" type="number" value="0" step="10"> m</span></label>
+            <label>水平速度保留率 <span><input id="retention" type="number" value="92" min="30" max="120" step="1"> %</span></label>
+            <label>时间校准 <span><input id="calibration" type="number" value="0" step="0.1"> s</span></label>
+            <label>进场提醒 <span><input id="approach" type="number" value="20" min="6" step="1"> s</span></label>
+            <label>航线宽度 <span><input id="corridor" type="number" value="800" min="50" step="50"> m</span></label>
+            <p>默认是通用近似值。不同炸弹与挂载阻力不同，请在试飞中用“时间校准”和“保留率”校准。</p>
+          </div>
+        </details>
+      </aside>
+    </div>
+
+    <footer>
+      <span>只读 localhost:8111 · 不注入游戏进程</span>
+      <span id="modeLabel">LIVE MODE</span>
+    </footer>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>
